@@ -24,8 +24,6 @@
 	<array>
 		<string>Flash</string>
 	</array>
-	<key>PlexPluginDebug</key>
-	<string>1</string>
 	<key>PlexPluginMode</key>
 	<string>AlwaysOn</string>
 	<key>PlexPluginRegions</key>
