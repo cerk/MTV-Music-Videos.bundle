@@ -8,7 +8,7 @@ MTV_VIDEO_TOPRATED  = "http://www.mtv.com/music/video/popular.jhtml"
 MTV_VIDEO_YEARBOOK  = "http://www.mtv.com/music/yearbook/"
 MTV_VIDEO_DIRECTORY = "http://www.mtv.com/music/video/browse.jhtml?chars=%s"
 
-USER_AGENT = 'Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; en-US; rv:1.9.2.12) Gecko/20101026 Firefox/3.6.12'
+USER_AGENT = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.162 Safari/535.19'
 
 ####################################################################################################
 def Start():
@@ -43,14 +43,21 @@ def VideoPage(sender, pageUrl):
     dir = MediaContainer(title2=sender.itemTitle)
     Log("Scraping "+pageUrl)
     content = HTML.ElementFromURL(pageUrl)
-    for item in content.xpath('//div[@class="group-b"]/div/div//ol/li/div'):
+    for item in content.xpath('//div[@class="title2"]'):
         link = MTV_ROOT + item.xpath("a")[0].get('href')
-        image = MTV_ROOT + item.xpath("a/img")[0].get('src')
+        image = ''
+        xpathImg = item.xpath("a/img")
+        if len(xpathImg) > 0:
+            image = xpathImg[0].get('src')
+        title = ''
         title = item.xpath("a")[-1].text.strip()
         if title == None or len(title) == 0:
-            title = item.xpath("a/img")[-1].get('alt')
+            if len(xpathImg) > 0:
+                title = xpathImg[-1].get('alt')
+        if title == None or len(title) == 0:
+            title = item.xpath("a/meta")[0].get('content')
         title = title.replace('"','')
-        dir.Append(WebVideoItem(link, title=title, thumb=Function(Thumb,url=image)))
+        dir.Append(Function(VideoItem(FindEpisodePlayer, title=title, thumb=Function(Thumb,url=image)), url=link))
     if len(dir)==0:
       return MessageContainer("Sorry !","No video available in this category.")
     else:
@@ -98,3 +105,20 @@ def Artists(sender, ch):
       return MessageContainer("Error","No artist in this category")
     else:
       return dir
+      
+####################################################################################################
+def FindEpisodePlayer(sender, url):
+    content = HTTP.Request(url).content
+    flashlink = ''
+    if content.find('MTVN.Player.isVevoVideo = true;') >= 0:
+        # Vevo video
+        flashlink = re.search('MTVN.Player.vevoVideoId = "(?P<id>.+)"', content).group('id')
+        flashlink = 'http://videoplayer.vevo.com/embed/standardv3/3?playerType=standard&videoId=' + flashlink + '&autoplay=1'
+        Log('FlashLink:'+flashlink)
+        return Redirect(WebVideoItem(flashlink))
+    else:
+        # MTV video
+        flashlink = re.search('http://media.mtvnservices.com/(?P<id>.+video[^"]+)', content).group('id')
+        flashlink = 'http://media.mtvnservices.com/player/prime/mediaplayerprime.1.12.1.swf?uri=' + flashlink
+        Log('FlashLink:'+flashlink)
+        return Redirect(WebVideoItem(flashlink))

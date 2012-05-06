@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site site="http://videoplayer.vevo.com"
+	plugin="http://cache.vevo.com/a/swf/versions/3/player.swf"
+    initialState="playing"
+	agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_7) AppleWebKit/534.30 (KHTML, like Gecko) Chrome/12.0.742.100 Safari/534.30"
+	windowWidth="640"
+	windowHeight="360"
+	version="1.0">
+
+	<crop x="0" y="0" width="0" height="0" />
+    
+    <!-- This should work but it never does. Commenting it out. I think the main reason it doesn't work is Vevo doesn't make the thumb jump immediately but instead animates its movement.
+	<seekbar type="thumb">
+		<start x="0" y="359" />
+		<end x="547" y="359" />
+		<played>
+            <color rgb="505050" op="brighter-than" />
+		</played>
+	</seekbar>
+    -->
+    
+    <!-- We are playing if the pause graphic is showing -->
+	<condition name="playing">  
+        <and>
+            <color x="28" y="326" rgb="808080" op="brighter-than" />
+            <color x="28" y="330" rgb="808080" op="brighter-than" />
+            <color x="28" y="334" rgb="808080" op="brighter-than" />
+            <color x="32" y="326" rgb="808080" op="dimmer-than" />
+            <color x="32" y="330" rgb="808080" op="dimmer-than" />
+            <color x="32" y="334" rgb="808080" op="dimmer-than" />
+            <color x="35" y="326" rgb="808080" op="brighter-than" />
+            <color x="35" y="330" rgb="808080" op="brighter-than" />
+            <color x="35" y="334" rgb="808080" op="brighter-than" />
+        </and>
+    </condition>
+
+    <!-- We are paused if the play graphic is showing -->
+	<condition name="paused">  
+        <and>
+            <color x="28" y="327" rgb="808080" op="brighter-than" />
+            <color x="28" y="330" rgb="808080" op="brighter-than" />
+            <color x="28" y="333" rgb="808080" op="brighter-than" />
+            <color x="32" y="326" rgb="808080" op="dimmer-than" />
+            <color x="32" y="330" rgb="808080" op="brighter-than" />
+            <color x="32" y="334" rgb="808080" op="dimmer-than" />
+            <color x="35" y="326" rgb="808080" op="dimmer-than" />
+            <color x="34" y="330" rgb="808080" op="brighter-than" />
+            <color x="35" y="334" rgb="808080" op="dimmer-than" />
+        </and>
+    </condition>
+    
+    <!-- We are done if the seekbar graphic is at the end -->
+	<condition name="done">  
+        <and>
+            <color x="550" y="347" rgb="CCCCCC" />
+            <color x="550" y="353" rgb="CCCCCC" />
+            <color x="550" y="359" rgb="CCCCCC" />
+            <color x="551" y="347" rgb="484848" />
+            <color x="551" y="353" rgb="484848" />
+            <color x="551" y="359" rgb="484848" />
+        </and>
+    </condition>    
+	
+	<!-- PLAYING -->
+	<state name="playing">       		
+		<!-- Video ends -->
+		<event>
+			<condition>
+                <condition name="done" />
+			</condition>
+			<action>
+				<goto state="end" />
+			</action>
+		</event>
+        
+		<event>
+			<condition>
+				<command name="pause" />
+			</condition>
+			<action>
+                <move x="30" y="329" />
+                <pause time="100" />
+				<click x="30" y="329" />
+			</action>
+		</event>
+              
+        <event>
+            <condition>
+                <condition name="paused" />
+            </condition>
+            <action>
+                <goto state="paused" />
+            </action>
+        </event>
+	</state>
+	
+	<!-- PAUSED -->
+	<state name="paused">
+		<!-- Video ends -->
+		<event>
+			<condition>
+                <condition name="done" />
+			</condition>
+			<action>
+				<goto state="end" />
+			</action>
+		</event>
+        
+		<event>
+			<condition>
+				<command name="play" />
+			</condition>
+			<action>
+                <move x="30" y="329" />
+                <pause time="100" />
+				<click x="30" y="329" />
+				<goto state="playing" />
+			</action>
+		</event>
+        
+        <event>
+            <condition>
+                <condition name="playing" />
+            </condition>
+            <action>
+                <goto state="playing" />
+            </action> 
+        </event>    
+	</state>
+</site>
